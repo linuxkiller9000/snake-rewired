@@ -60,8 +60,12 @@ class TestLobby(unittest.TestCase):
 
     def test_wasd_join_leave_with_w_and_s(self):
         s = self.setup_screen("battle")
-        # kb1 joined by default: S removes, W re-joins, no duplicates.
+        # Joined by default: S navigates (never removes), Delete on the
+        # focused row removes, W re-joins, no duplicates.
         s.handle_event(key_event(pygame.K_s))
+        self.assertTrue(any(e["device"] == ("kb", 0) for e in s.roster))
+        s.focus = ("roster", 0)
+        s.handle_event(key_event(pygame.K_DELETE))
         self.assertFalse(any(e["device"] == ("kb", 0) for e in s.roster))
         s.handle_event(key_event(pygame.K_w))
         s.handle_event(key_event(pygame.K_w))
@@ -70,7 +74,11 @@ class TestLobby(unittest.TestCase):
 
     def test_arrows_join_leave_with_up_down(self):
         s = self.setup_screen("battle")
-        s.handle_event(key_event(pygame.K_DOWN))   # kb2 leaves
+        s.handle_event(key_event(pygame.K_DOWN))   # navigates, kb2 stays
+        self.assertTrue(any(e["device"] == ("kb", 1) for e in s.roster))
+        idx = [i for i, e in enumerate(s.roster) if e["device"] == ("kb", 1)][0]
+        s.focus = ("roster", idx)
+        s.handle_event(key_event(pygame.K_BACKSPACE))   # kb2 leaves
         self.assertFalse(any(e["device"] == ("kb", 1) for e in s.roster))
         s.handle_event(key_event(pygame.K_UP))     # kb2 joins
         self.assertTrue(any(e["device"] == ("kb", 1) for e in s.roster))

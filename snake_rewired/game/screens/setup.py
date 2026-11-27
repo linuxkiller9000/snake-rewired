@@ -1,7 +1,8 @@
 """Match setup: mode options plus a device-led lobby.
 
 Players join by pressing a key on the device they will use: W joins the
-WASD player (S leaves), Up joins the arrow-keys player (Down leaves), and
+WASD player and Up joins the arrow-keys player (once joined, Up/Down and W/S
+move between rows; Backspace/Delete removes the focused player), and
 a controller's primary button joins that pad (secondary button leaves).
 B adds a bot, X removes the most recent bot. Tab moves between option
 rows, Left/Right changes values, Enter starts.
@@ -84,7 +85,13 @@ class SetupScreen(Screen):
         return mapping.get(action)
 
     def _handle_lobby_key(self, key_name):
-        """Device-led join/leave. Returns True when the key was consumed."""
+        """Device-led join. Returns True when the key was consumed.
+
+        Up/W join their keyboard player while that player is not in the
+        lobby. Once joined (or for Down/S), the keys fall through so they can
+        navigate the option rows. Leaving is Backspace/Delete on the
+        focused player row.
+        """
         pairs = ((0, ("kb", 0)), (1, ("kb", 1)))
         for player_index, device in pairs:
             if key_name == self._kb_join_key(player_index, "up"):
@@ -93,11 +100,24 @@ class SetupScreen(Screen):
                         return True
                     if not self._join(device):
                         self.app.toast("Lobby is full")
-                return True
-            if key_name == self._kb_join_key(player_index, "down"):
-                self._leave(device)
-                return True
+                    return True
         return False
+
+    def _leave_focused(self):
+        kind, key = self.focus
+        if kind == "roster" and self.roster[key]["device"][0] != "bot":
+            self._leave(self.roster[key]["device"])
+            return True
+        return False
+
+    def _is_nav_key(self, key_name):
+        up = {self._kb_join_key(0, "up"), self._kb_join_key(1, "up")}
+        down = {self._kb_join_key(0, "down"), self._kb_join_key(1, "down")}
+        if key_name in down:
+            return 1
+        if key_name in up:
+            return -1
+        return 0
 
     # -- focus model ---------------------------------------------------------
     def _rebuild_focus(self):
@@ -251,8 +271,13 @@ class SetupScreen(Screen):
                     self.app.toast("No bot to remove")
             elif ev.key == pygame.K_t:
                 self._toggle_team()
-            else:
-                self._handle_lobby_key(name)
+            elif ev.key in (pygame.K_BACKSPACE, pygame.K_DELETE):
+                if not self._leave_focused():
+                    self.app.toast("Focus a human player row to remove it")
+            elif not self._handle_lobby_key(name):
+                nav = self._is_nav_key(name)
+                if nav:
+                    self._move_focus(nav)
         elif ev.type == pygame.JOYBUTTONDOWN:
             slot = self._pad_slot_for(ev)
             if ev.button in (8, 9):
@@ -355,8 +380,8 @@ class SetupScreen(Screen):
 
         # Join hints
         y += 4
-        hints = ["W: join WASD   S: leave",
-                 "Up: join arrows   Down: leave",
+        hints = ["W: join WASD   Up: join arrows",
+                 "Up/Down (or W/S): move   Del: remove player",
                  "Pad btn 1: join   btn 2: leave",
                  "B: add bot   X: remove bot"]
         for hi, h in enumerate(hints):

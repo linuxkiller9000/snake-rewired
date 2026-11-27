@@ -19,8 +19,8 @@ Both keyboard players share one keyboard; their keys are independent.
 
 Players join by pressing a key on the device they will use:
 
-- **W** joins the WASD player, **S** removes them.
-- **Up arrow** joins the arrow-keys player, **Down arrow** removes them.
+- **W** joins the WASD player; **Up arrow** joins the arrow-keys player. Once joined, W/S and Up/Down move between rows.
+- **Backspace/Delete** removes the focused human player.
 - **Controller button 1** joins that controller, **button 2** removes it.
 - **B** adds a bot, **X** removes the most recent bot.
 - **Tab** moves between option rows, **Left/Right** changes a value
