@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 (2026-11-27) - lobby keyboard fix
+- Match-setup lobby: Up/Down and W/S move focus between rows once their
+  player has joined (they were reserved as join/leave keys, so the
+  keyboard could never leave the lobby or reach START).
+- Down and S no longer remove anyone; Backspace/Delete removes the
+  focused human player (X still removes bots). Fixes S doing nothing in
+  the solo Classic lobby and Down kicking out the arrow player.
+
 ## 0.3.1 (2026-11-23) - layout patch
 - Six-player timed-mode setup: START button fully inside the panel.
 - HUD transparency raised so snakes passing under it stay clearly visible.
