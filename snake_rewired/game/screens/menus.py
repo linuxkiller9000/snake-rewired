@@ -33,8 +33,26 @@ class MainMenu(MenuScreen):
                  lambda: self.app.push_screen(CreditsScreen(self.app)))
         self.add("Exit", self.app.quit)
 
+    DESCRIPTIONS = {
+        "Play: Classic": "Faithful Nokia-style Snake: play alone or add bots, growing speed, high-score chase.",
+        "Multiplayer: Battle Arena": "Up to 6 snakes share one arena: last snake slithering wins.",
+        "Score Race": "Most food before the clock runs out takes the match.",
+        "Team Survival": "Two teams, shared score: keep your teammates alive.",
+        "Garage: Snake Customization": "Pick each player's color, pattern and head.",
+        "Statistics": "Your matches, wins, food and best scores.",
+        "Settings": "Display, audio, controls and accessibility options.",
+        "Credits": "Who made this and with what.",
+        "Exit": "Close the game.",
+    }
+
     def draw(self, surf):
         super().draw(surf)
+        # one-line description of the highlighted item
+        label = self.items[self.index][0] if self.items else ""
+        desc = self.DESCRIPTIONS.get(label)
+        if desc:
+            d = font(24).render(desc, True, DIM)
+            surf.blit(d, d.get_rect(center=(LOGICAL_W // 2, LOGICAL_H - 56)))
         # little snake logo wiggle
         t = pygame.time.get_ticks() // 90
         for i in range(10):

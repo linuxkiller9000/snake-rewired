@@ -91,9 +91,11 @@ class PlayScreen(Screen):
                           if ttl - dt > 0]
 
     def _finish(self, result):
+        prev_best = self.app.save.get("high_scores", {}).get(
+            result.get("mode", ""), 0)
         self.app.finish_match(self.match, result)
         self.app.switch_screen(ResultsScreen(self.app, self.match, result,
-                                             self.renderer))
+                                             self.renderer, prev_best))
 
     # ------------------------------------------------------------------
     def draw(self, surf):
@@ -109,6 +111,9 @@ class PlayScreen(Screen):
             surf.blit(shade, bg)
             surf.blit(label, (bg.x + 8, bg.y + 3))
             y += 30
+        if self.started and not self.match.over:
+            hint = font(20).render("Esc: pause", True, (150, 148, 155))
+            surf.blit(hint, (arect.x + 10, arect.bottom - 26))
         if not self.started:
             dim = pygame.Surface((LOGICAL_W, LOGICAL_H), pygame.SRCALPHA)
             dim.fill((0, 0, 0, 130))
@@ -148,11 +153,12 @@ class PauseScreen(MenuScreen):
 
 
 class ResultsScreen(Screen):
-    def __init__(self, app, match, result, renderer):
+    def __init__(self, app, match, result, renderer, prev_best=0):
         self.app = app
         self.match = match
         self.result = result
         self.renderer = renderer
+        self.prev_best = prev_best
 
     def handle_event(self, ev):
         if ev.type == pygame.KEYDOWN:
@@ -166,7 +172,11 @@ class ResultsScreen(Screen):
     def draw(self, surf):
         surf.fill(BG)
         res = self.result
-        if self.match.mode.teams and res.get("winning_team") is not None:
+        solo = len(res["rankings"]) == 1
+        if solo:
+            # A solo run has no opponent to beat: say what happened.
+            headline = "GAME OVER"
+        elif self.match.mode.teams and res.get("winning_team") is not None:
             headline = f"TEAM {res['winning_team'] + 1} WINS!"
         elif res.get("winner_name"):
             headline = f"{res['winner_name']} WINS!"
@@ -174,7 +184,23 @@ class ResultsScreen(Screen):
             headline = "MATCH OVER"
         t = font(84).render(headline, True, ACCENT)
         surf.blit(t, t.get_rect(center=(LOGICAL_W // 2, 70)))
-        panel = pygame.Rect(LOGICAL_W // 2 - 430, 130, 860, 470)
+        top_score = max((r["score"] for r in res["rankings"]), default=0)
+        if top_score > self.prev_best and top_score > 0:
+            best_part, ncolor = f"New best score: {top_score}!", (240, 220, 140)
+        elif self.prev_best > 0:
+            best_part, ncolor = f"Best: {self.prev_best}", DIM
+        else:
+            best_part, ncolor = None, DIM
+        secs = int(res.get("duration", 0))
+        note = "   ·   ".join(([best_part] if best_part else []) +
+                           [f"Time {secs // 60}:{secs % 60:02d}"])
+        nt = font(28).render(note, True, ncolor)
+        surf.blit(nt, nt.get_rect(center=(LOGICAL_W // 2, 122)))
+        # Panel height fits the rows instead of a fixed tall empty box.
+        n_rows = len(res["rankings"])
+        n_team = len(res.get("team_scores") or {})
+        panel_h = 54 + n_rows * 38 + (8 + n_team * 32 if n_team else 0) + 16
+        panel = pygame.Rect(LOGICAL_W // 2 - 430, 150, 860, panel_h)
         draw_panel(surf, panel)
         header = font(28).render(
             f"{'#':<3} {'Player':<18} {'Score':>7} {'Food':>6} "

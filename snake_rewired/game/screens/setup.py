@@ -324,7 +324,12 @@ class SetupScreen(Screen):
         d = font(24).render(self.mode.description, True, DIM)
         surf.blit(d, d.get_rect(center=(LOGICAL_W // 2, 80)))
 
-        panel = pygame.Rect(LOGICAL_W // 2 - 430, 104, 860, 556)
+        # Panel height fits the actual content (option rows + roster +
+        # hints + START) instead of a fixed tall box with dead space.
+        n_opt = sum(1 for kind, _k in self.focus_rows if kind == "option")
+        n_roster = max(1, len(self.roster))
+        content_h = 14 + n_opt * 36 + 4 + 28 + n_roster * 36 + 4 + 48 + 56 + 14
+        panel = pygame.Rect(LOGICAL_W // 2 - 430, 104, 860, content_h)
         draw_panel(surf, panel)
         y = panel.y + 14
         row_h = 36
@@ -390,14 +395,17 @@ class SetupScreen(Screen):
             surf.blit(font(22).render(h, True, DIM), (hx, hy))
         y += 48
 
-        # START
+        # START: always drawn as a button (filled when focused, outlined
+        # otherwise) so it reads as the way out of the lobby.
         selected = self.focus[0] == "start"
         s = font(34).render("START MATCH", True,
                             (20, 20, 26) if selected else ACCENT)
-        sr = s.get_rect(center=(panel.centerx, y + 16))
+        sr = s.get_rect(center=(panel.centerx, y + 28))
+        box = sr.inflate(44, 16)
         if selected:
-            pygame.draw.rect(surf, ACCENT, sr.inflate(44, 14),
-                             border_radius=8)
+            pygame.draw.rect(surf, ACCENT, box, border_radius=8)
+        else:
+            pygame.draw.rect(surf, ACCENT, box, 2, border_radius=8)
         surf.blit(s, sr)
 
         foot = font(24).render(

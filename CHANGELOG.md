@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.3 (2026-11-27) - UI/UX pass
+- Match-setup lobby: the panel now sizes to its content instead of a
+  fixed tall box with dead space, and START MATCH is always drawn as a
+  button (filled when focused, outlined otherwise) so the way to begin
+  is visible at a glance.
+- Results: solo runs now say "GAME OVER" instead of "P1 WINS!", the
+  panel fits the ranking rows, and a line under the headline shows the
+  best score for the mode ("New best score: N!" when beaten).
+- HUD: the per-player line now reads "P1  0 pts  len 3" / "P1  OUT (0
+  pts)" instead of bare numbers.
+- In-match: a small dim "Esc: pause" hint sits at the arena's bottom
+  edge while a match is running.
+- Main menu: a one-line description of the highlighted item appears
+  above the footer.
+- Timing: the HUD shows the match clock (elapsed in untimed modes,
+  remaining in timed modes, turning gold in the last 10 seconds), and
+  the results screen shows the match duration next to the best score.
+
 ## 0.3.2 (2026-11-27) - lobby keyboard fix
 - Match-setup lobby: Up/Down and W/S move focus between rows once their
   player has joined (they were reserved as join/leave keys, so the

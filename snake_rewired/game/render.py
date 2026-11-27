@@ -292,10 +292,18 @@ class WorldRenderer:
         small = pygame.font.Font(None, 22)
         lines = []
         header = m.mode.title
+        header_color = (235, 235, 240)
         if m.time_remaining is not None:
+            # Timed modes count down; gold when the clock is almost out.
             secs = int(m.time_remaining)
             header += f"   {secs // 60}:{secs % 60:02d}"
-        lines.append((header, (235, 235, 240), None))
+            if secs <= 10:
+                header_color = (240, 220, 140)
+        else:
+            # Untimed modes show the elapsed match time.
+            secs = int(m.time)
+            header += f"   {secs // 60}:{secs % 60:02d}"
+        lines.append((header, header_color, None))
         for sid in sorted(m.snakes):
             snake = m.snakes[sid]
             skin = self.skins[sid]
@@ -303,13 +311,13 @@ class WorldRenderer:
             if snake.team is not None:
                 name += f" T{snake.team + 1}"
             if snake.alive:
-                info = f"{snake.score}  len {snake.length}"
+                info = f"{snake.score} pts  len {snake.length}"
                 if snake.speed_effect:
                     info += f"  {snake.speed_effect[:3].upper()}"
                 text = f"{name}  {info}"
                 color = (225, 225, 230)
             else:
-                text = f"{name}  OUT {snake.score}"
+                text = f"{name}  OUT ({snake.score} pts)"
                 color = (150, 148, 155)
             lines.append((text, color, skin.color))
         if m.mode.teams:
